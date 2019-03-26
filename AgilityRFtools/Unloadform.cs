@@ -67,8 +67,8 @@ namespace AgilityRFtools
 
             if (key=="")
             {
-                
 
+                Console.Read();
             }
             else if (key =="1")
             {
