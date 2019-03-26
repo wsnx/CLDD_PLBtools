@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Data.SqlClient;
-using System.Drawing;
 
 namespace AgilityRFtools
 {
 
     class UnloadForm
     {
-        private static string ASN;
-        private static string CartonID;
-        private static string Carline;
+        private static string ASN="";
+        private static string CartonID="";
+        private static string Carline="";
         private static string Conn = "Integrated Security=False;Data Source=10.130.24.4;Initial Catalog=KaizenDB;User ID=kadmin;Password=53c4dm1n;";
         private static string NIK = "18.332";
         private static string UserName="" ;
@@ -18,7 +17,7 @@ namespace AgilityRFtools
         private static int Qty=10;
         private static DateTime Editdate = DateTime.Now;
         private static string key;
-
+        private static string strKey = "";
 
         public void Frame()
         {
@@ -31,24 +30,35 @@ namespace AgilityRFtools
             Console.BackgroundColor = ConsoleColor.White;
 
         }
-        public void FormHeader ()
+        public void Start()
         {
             Frame();
-
-            Console.SetCursorPosition(0, Console.CursorTop + 1);
-            Console.Write("Carline Type :");
-
-            Console.SetCursorPosition(0, Console.CursorTop + 1);
-            Console.Write("ASN No.      :");
-
-            Console.SetCursorPosition(0, Console.CursorTop + 1);
-            Console.Write("PalletID     :");
-
-            Console.SetCursorPosition(0, Console.CursorTop + 1);
-            Console.Write("Scan QR      :");
-            Handler();
+            Console.SetCursorPosition(0, 2);
+            Console.WriteLine("Entry ASN    :");
+            ASNform();
         }
+        public void FormHeader ()
+        {
+            Console.Clear();
+            Frame();
+            Console.SetCursorPosition(0,2);
+            Console.WriteLine("ASN No.      :");
+            Console.WriteLine("No Mobil     :");
+            Console.WriteLine("Carline Type :");
+            Console.WriteLine("PalletID     :");
+            Console.WriteLine("Scan QR      :");
+            Console.SetCursorPosition(0, Console.CursorTop + 1);
+            Console.Write("0"+" of ");
+            Console.ForegroundColor= ConsoleColor.Red;
+            Console.WriteLine("36");
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine("------------------------");
+            
+        }
+        public void FormDetail()
+        {
 
+        }
         public static void ClearLine()
         {
         int currentLeft = Console.CursorLeft;
@@ -59,33 +69,158 @@ namespace AgilityRFtools
 
         private static void ScanResult()
         {
-
+            
 
         }
+//0
+        public void ASNform()
+        {
+            Ulang:
+            Console.SetCursorPosition(14, 2);
+            ConsoleKeyInfo cki;
+            strKey = "";
+            while (true)
+            {
+                cki = Console.ReadKey();
+                if (cki.Key == ConsoleKey.Escape)
+                {
+                    ASN = "";
+                    break;
+                }
+                else
+                    if (cki.Key == ConsoleKey.Enter)
+                {
+                    if (strKey == "")
+                    {
+                        ASN= "";
+                        goto Ulang;
+                    }
+                    else
+                    {
+                        key = "1";
+                        ASN= strKey;
+                        Handler();
+                        
+                    }
+                }
+                else
+                {
+                    strKey = strKey + cki.KeyChar;
+                }
+            }
+        }
+//1
+        public void PalletForm()
+        {
+            Ulang:
+            Console.SetCursorPosition(14, 5);
+            ConsoleKeyInfo cki;
+            strKey = "";
+            while (true)
+            {
+                cki = Console.ReadKey();
+                if (cki.Key == ConsoleKey.Escape)
+                {
+                    ASN = "";
+                    key = "0";
+                    Handler();
+                    break;
+                    
+                }
+                else
+                    if (cki.Key == ConsoleKey.Enter)
+                {
+                    if (strKey == "")
+                    {
+                        PalletID = "";
+                        goto Ulang;
+                    }
+                    else
+                    {
+                        key = "2";
+                        PalletID = strKey;
+                        Handler();
+
+                    }
+                }
+                else
+                {
+                    strKey = strKey + cki.KeyChar;
+                }
+            }
+        }
+        public void CartonForm()
+        {
+            Ulang:
+            Console.SetCursorPosition(14, 6);
+            ConsoleKeyInfo cki;
+            strKey = "";
+            while (true)
+            {
+                cki = Console.ReadKey();
+                if (cki.Key == ConsoleKey.Escape)
+                {
+                    CartonID = "";
+                    key = "1";
+                    Handler();
+                    break;
+                }
+                else
+                    if (cki.Key == ConsoleKey.Enter)
+                {
+                    if (strKey == "")
+                    {
+                        CartonID = "";
+                        goto Ulang;
+                    }
+                    else
+                    {
+                        key = "3";
+                        CartonID = strKey;
+                        Handler();
+
+                    }
+                }
+                else
+                {
+                    strKey = strKey + cki.KeyChar;
+                }
+            }
+        }
+
         public void Handler()
         {
 
-            if (key=="")
+            if (key=="0")
             {
-
-                Console.Read();
+                ClearLine();
+                FormHeader();
+                Console.SetCursorPosition(14, 2);
+                Console.Write(ASN);
+                ASNform();
             }
             else if (key =="1")
             {
-                Frame();
+
+                FormHeader();
+                Console.SetCursorPosition(14, 2);
+                Console.Write(ASN);
+                Console.SetCursorPosition(14, 3);
+                Console.Write(Carline);
+                PalletForm();
+            }
+            else if (key =="2")
+            {
+                FormHeader();
                 Console.SetCursorPosition(14, 2);
                 Console.Write(ASN);
                 Console.SetCursorPosition(14, 3);
                 Console.Write(Carline);
                 Console.SetCursorPosition(14, 4);
-                Console.Write(PalletID);
+                Console.Write(Carline);
                 Console.SetCursorPosition(14, 5);
-                Console.Write(CartonID);
-                
-
-            }
-            else if (key =="2")
-            {
+                Console.Write(PalletID);
+                CartonForm();
 
             }
             else if(key =="3")
@@ -94,17 +229,8 @@ namespace AgilityRFtools
             }
             else
             {
-                Console.SetCursorPosition(14, 2);
-                Carline = Console.ReadLine();
-                Console.SetCursorPosition(14, 3);
-                ASN = Console.ReadLine();
-                Console.SetCursorPosition(14, 4);
-                PalletID = Console.ReadLine();
-                Console.SetCursorPosition(14, 5);
-                CartonID = Console.ReadLine();
-                key = "1";
-                Frame();
-
+                ASNform();
+            
             }
         }
         private void ParsingQR()
