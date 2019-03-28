@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Drawing;
-using Console = Colorful.Console;
 
 
 namespace AgilityRFtools
@@ -10,38 +8,77 @@ namespace AgilityRFtools
         public static string NIK;
         public static string UserName;
 
+        public static string Password="";
 
         public void FormLogin()
         {
+            ulang:
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.WindowTop = 0;
-            Console.BackgroundColor = Color.White;
-            Console.ForegroundColor = Color.Black;
             Console.Clear();
-            Console.SetCursorPosition(1, 10);
+
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine("                                  ");
+            Console.WriteLine("       Agility International      ");
+            Console.WriteLine("                                  ");
+            Console.WriteLine("__________________________________");
+
+            Console.SetCursorPosition(0, 15);
             Console.Write("Back [esc] ");
             Console.Write("| Next [Enter]");
-            Console.SetCursorPosition(0, 0);
-            Console.BackgroundColor = Color.DarkOrange;
-            Console.ForegroundColor = Color.Black;
-            Console.WriteLine("                                        ");
-            Console.WriteLine("          Agility International         ");
-            Console.WriteLine("                                        ");
-            Console.BackgroundColor = Color.White;
-            Console.SetCursorPosition(0,5);
-            Console.Write("Entri NIK   :");
-            Console.SetCursorPosition(0, 6);
-            Console.Write("Password    :");
-            Console.SetCursorPosition(14,5);
-            NIK = Console.ReadLine();
-            Console.SetCursorPosition(14, 6);
-            UserName = Console.ReadLine();
 
-            Menu();    
+            Console.SetCursorPosition(0, 18);
+            Console.WriteLine("__________________________________");
+            Console.WriteLine("   PLB Agility Tools v 2.0.1      ");
+
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.SetCursorPosition(10, 5);
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.Write("                     ");
+            Console.SetCursorPosition(10, 7);
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.Write("                     ");
+            Console.SetCursorPosition(0,5);
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.Write("NIK  :");            
+            Console.SetCursorPosition(0, 7);
+            Console.Write("Pass :");
+            Console.SetCursorPosition(10, 5);
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.Black;
+            NIK = Console.ReadLine();
+            Console.SetCursorPosition(10, 7);
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.Black;
+            ConsoleKeyInfo key;
+            do
+            {
+                key = Console.ReadKey(true);
+
+                if (key.Key == ConsoleKey.UpArrow|| key.Key == ConsoleKey.Escape)
+                {
+                    goto ulang;
+                }
+                else if(key.Key != ConsoleKey.Backspace)
+                {
+                    Password += key.KeyChar;
+                    Console.Write("*");
+                }
+                else
+                {
+                    Console.Write("\b");
+                }
+            }
+            while (key.Key != ConsoleKey.Enter);
+            Console.BackgroundColor = ConsoleColor.Black;
+            Menu(); 
+            
         }
         private void Menu()
         {
-            UnloadForm L = new UnloadForm();
-            L.Start();
+            Trial L = new Trial();
+            L.test();
 
         }
     }

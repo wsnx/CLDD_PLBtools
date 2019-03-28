@@ -1,33 +1,38 @@
 ﻿using System;
 using System.Data.SqlClient;
+using System.Drawing;
+using Console = Colorful.Console;
 
 namespace AgilityRFtools
 {
 
-    class UnloadForm
+    class UnloadForm : QrConfig
     {
         private static string ASN="";
         private static string CartonID="";
         private static string Carline="";
-        private static string Conn = "Integrated Security=False;Data Source=10.130.24.4;Initial Catalog=KaizenDB;User ID=kadmin;Password=53c4dm1n;";
         private static string NIK = "18.332";
-        private static string UserName="" ;
+        private static string UserName="Wisnu" ;
         private static string PalletID="";
         private static string SKU="";
         private static int Qty=10;
         private static DateTime Editdate = DateTime.Now;
         private static string key;
         private static string strKey = "";
-
+        private static Int32 Expected;
+        private static Int32 Received;
         public void Frame()
         {
-            Console.BackgroundColor = ConsoleColor.White;
-            Console.ForegroundColor = ConsoleColor.Black;
+            Console.BackgroundColor = Color.WhiteSmoke;
+            Console.ForegroundColor = Color.Black;
             Console.Clear();
-            Console.BackgroundColor = ConsoleColor.Green;
-            Console.ForegroundColor = ConsoleColor.Black;
-            Console.WriteLine("     Form Unloading     ");
-            Console.BackgroundColor = ConsoleColor.White;
+            Console.BackgroundColor = Color.DarkOrange;
+            
+            Console.ForegroundColor = Color.Black;
+            Console.WriteLine("           Unload Form           ");
+            Console.WriteLine("_________________________________");
+
+            Console.BackgroundColor = Color.WhiteSmoke;
 
         }
         public void Start()
@@ -39,6 +44,7 @@ namespace AgilityRFtools
         }
         public void FormHeader ()
         {
+            SumDetails();
             Console.Clear();
             Frame();
             Console.SetCursorPosition(0,2);
@@ -48,12 +54,13 @@ namespace AgilityRFtools
             Console.WriteLine("PalletID     :");
             Console.WriteLine("Scan QR      :");
             Console.SetCursorPosition(0, Console.CursorTop + 1);
-            Console.Write("0"+" of ");
-            Console.ForegroundColor= ConsoleColor.Red;
-            Console.WriteLine("36");
-            Console.ForegroundColor = ConsoleColor.Black;
+            Console.Write("Total "+Received+" of ");
+            Console.ForegroundColor= Color.Red;
+            Console.WriteLine(Expected+ " Carton");
+            Console.ForegroundColor = Color.Black;
             Console.WriteLine("------------------------");
-            
+            Console.SetCursorPosition(0, Console.CursorTop + 1);
+            resultSql();  
         }
         public void FormDetail()
         {
@@ -72,7 +79,6 @@ namespace AgilityRFtools
             
 
         }
-//0
         public void ASNform()
         {
             Ulang:
@@ -84,9 +90,9 @@ namespace AgilityRFtools
                 cki = Console.ReadKey();
                 if (cki.Key == ConsoleKey.Escape)
                 {
-                    ASN = "";
-                    break;
-                }
+                    backtomenu();
+                 }
+                
                 else
                     if (cki.Key == ConsoleKey.Enter)
                 {
@@ -109,7 +115,7 @@ namespace AgilityRFtools
                 }
             }
         }
-//1
+
         public void PalletForm()
         {
             Ulang:
@@ -225,7 +231,7 @@ namespace AgilityRFtools
             }
             else if(key =="3")
             {
-
+                ParsingQR();
             }
             else
             {
@@ -236,15 +242,39 @@ namespace AgilityRFtools
         private void ParsingQR()
         {
 
+            SqlConnection cn = new SqlConnection(DBlocal);
+            cn.Close();
+            SqlCommand cmd = new SqlCommand("select *  from TbPlBSami_FG_QRConfig", cn);
+            cn.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+
+                AssySeq = reader.GetInt32(3);
+                CartonIDSeq = reader.GetInt32(4);
+                Carline = reader.GetString(2);
+                Delimiter = reader.GetString(6);
+
+            }
+
+            cn.Close();
+            string[] HasilScan = CartonID.Split(new string[] {Delimiter }, StringSplitOptions.None);
+            string txt_sku = HasilScan[4].ToString();
+            string txt_CartonID = HasilScan[5].ToString();
+            CartonID = txt_CartonID.ToString();
+            SKU = txt_sku.ToString();
+            Console.SetCursorPosition(0, 7);
+            Console.WriteLine("Transmiting data......");
             UpdateSql();
+
         }
 
         void UpdateSql()
         {
-            SqlConnection cn = new SqlConnection(Conn);
+            SqlConnection cn = new SqlConnection(DBlocal);
             cn.Close();
-            SqlCommand cmd = new SqlCommand("INSERT INTO kaizenDB.dbo.tbPLBSAMI_FG_UnloadingDetail(" +
-                "ASN,CarlineType,SKU,CartonID,Qty,PalletID,EditDate,UserName,NIK)" +
+            SqlCommand cmd = new SqlCommand("INSERT INTO kaizenDB.dbo.tbPLBSAMI_FG_UnloadDetail(" +
+                "ASN,Carline,SKU,CartonID,Qty,PalletID,EditDate,UserName,NIK)" +
                 " VALUES (@ASN,@Carline,@SKU,@CartonID,@Qty,@PalletID,@EditDate,@UserName,@NIK)", cn);
             cmd.Parameters.Add(new SqlParameter("ASN", ASN));
             cmd.Parameters.Add(new SqlParameter("Carline",Carline ));
@@ -259,9 +289,11 @@ namespace AgilityRFtools
             try
             {
                 cmd.ExecuteNonQuery();
-                Console.ForegroundColor = ConsoleColor.Green;
+                Console.ForegroundColor = Color.Green;
                 cn.Close();
-                key = "1";
+                Console.SetCursorPosition(0, 7);
+                Console.WriteLine("Succes");
+                key = "2";
                 Handler();
             }
             catch (Exception ex)
@@ -270,15 +302,14 @@ namespace AgilityRFtools
                 Console.ReadKey();
                 cn.Close();
             }
+
         }
 
         private static void resultSql()
         {
-            
-            SqlConnection cn = new SqlConnection(Conn);
-            SqlCommand cmd = new SqlCommand("select ASN,CartonID,PalletID from tbPLBSAMI_FG_UnloadingDetail" +
-                "  order by transid desc", cn);
-            //cmd.Parameters.AddWithValue("@ASN",ASN );
+         SqlConnection cn = new SqlConnection(DBlocal);
+            SqlCommand cmd = new SqlCommand("select ASN,CartonID,PalletID from tbPLBSAMI_FG_UnloadDetail" +
+                " WHERE ASN = '0000000006' order by TransID Desc", cn);
             cn.Open();
             SqlDataReader reader = cmd.ExecuteReader();
                 while (reader.Read())
@@ -288,9 +319,27 @@ namespace AgilityRFtools
                 }
 
                 reader.Close();
-            Console.Read();
-            
         }
+        private void backtomenu()
+        {
+            LoginForm L = new LoginForm();
+            L.FormLogin();
+        }
+        public static void SumDetails()
+        {
+                SqlConnection cn = new SqlConnection(DBlocal);
+                cn.Close();
+                SqlCommand cmd = new SqlCommand("Select Expected,Received from v_tbPLBSAMI_fg_UnloadSum where RECEIPTKEY='0000000006'", cn);
+                cmd.Parameters.AddWithValue("@RECEIPTKEY", ASN);
+                cn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    Expected = reader.GetInt32(0);
+                    Received = reader.GetInt32(1);
 
+                }
+            cn.Close();
+        }
     }
 }
