@@ -6,12 +6,18 @@ namespace AgilityRFtools
 {
     class Program
     {
+
         static void Main(string[] args)
         {
-            LoginForm L = new LoginForm();
-            L.FormLogin();
 
-            
+            // LoginForm L = new LoginForm();
+            //L.FormLogin();
+
+            //Tes
+            PalletChceking L = new PalletChceking();
+            L.Start();
+
+
         }
     }
 }
