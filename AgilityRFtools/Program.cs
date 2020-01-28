@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace AgilityRFtools
+﻿namespace AgilityRFtools
 {
     class Program
     {
@@ -10,12 +6,11 @@ namespace AgilityRFtools
         static void Main(string[] args)
         {
 
-            // LoginForm L = new LoginForm();
-            //L.FormLogin();
+            LoginForm L = new LoginForm();
+            L.FormLogin();
 
-            //Tes
-            PalletChceking L = new PalletChceking();
-            L.Start();
+            // Generate L = new Generate();
+            //L.CreateTask();
 
 
         }

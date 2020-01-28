@@ -1,19 +1,20 @@
 ﻿using System;
+
 using System.Data.SqlClient;
 
 namespace AgilityRFtools
 {
-    class LoginForm :ConfigDB
+    class LoginForm : ConfigDB
     {
-        public static string FormType="";
+        public static string FormType = "";
         private static string txt_NIK;
-        private static string txt_Pass="";
+        private static string txt_Pass = "";
         public static string NIK;
         public static string UserName;
-        public static string Password="";
+        public static string Password = "";
         public void FormLogin()
         {
-            ulang:
+        ulang:
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Clear();
@@ -34,9 +35,9 @@ namespace AgilityRFtools
             Console.SetCursorPosition(10, 7);
             Console.BackgroundColor = ConsoleColor.White;
             Console.Write("                   ");
-            Console.SetCursorPosition(0,5);
+            Console.SetCursorPosition(0, 5);
             Console.BackgroundColor = ConsoleColor.Black;
-            Console.Write("NIK  :");            
+            Console.Write("NIK  :");
             Console.SetCursorPosition(0, 7);
             Console.Write("Pass :");
             Console.SetCursorPosition(10, 5);
@@ -51,11 +52,11 @@ namespace AgilityRFtools
             {
                 key = Console.ReadKey(true);
 
-                if (key.Key == ConsoleKey.UpArrow|| key.Key == ConsoleKey.Escape)
+                if (key.Key == ConsoleKey.UpArrow || key.Key == ConsoleKey.Escape)
                 {
                     goto ulang;
                 }
-                else if(key.Key != ConsoleKey.Backspace)
+                else if (key.Key != ConsoleKey.Backspace)
                 {
                     txt_Pass += key.KeyChar;
                     Console.Write("*");
@@ -67,19 +68,21 @@ namespace AgilityRFtools
             }
             while (key.Key != ConsoleKey.Enter);
             Console.BackgroundColor = ConsoleColor.Black;
-            Console.SetCursorPosition(0,8);
-            Login(); 
+            Console.SetCursorPosition(0, 8);
+            Login();
         }
         private void Menu()
         {
             MainMenu L = new MainMenu();
             L.Menu_Home();
         }
+
         void Login()
         {
 
             SqlConnection cn = new SqlConnection(DBlocal);
-            SqlCommand cmd = new SqlCommand("select NIK,UserName,Password from kaizendb.dbo.tbplbsami_fg_user where nik =@nik", cn);
+            cn.Close();
+            SqlCommand cmd = new SqlCommand("select NIK,UserName,Password from tbplbsami_fg_user where nik =@nik", cn);
             cmd.Parameters.AddWithValue("@NIK", txt_NIK);
             cn.Open();
             var result = cmd.ExecuteScalar();
@@ -92,9 +95,7 @@ namespace AgilityRFtools
                     NIK = reader.GetString(0);
                     UserName = reader.GetString(1);
                     Password = reader.GetString(2);
-
                 }
-
                 ValidasiUser();
             }
             else
@@ -107,18 +108,18 @@ namespace AgilityRFtools
         }
         void ValidasiUser()
         {
-            if (txt_Pass.Substring(0,4)==Password)
+            if (txt_Pass.Substring(0, 4) == Password)
             {
-            Menu();
+                Menu();
             }
             else
             {
-            Console.ReadKey();
-            Console.Clear();
-            Console.SetCursorPosition(0, 8);
-            Console.WriteLine("NIK SALAH");
-            FormLogin();
-          }
+                Console.ReadKey();
+                Console.Clear();
+                Console.SetCursorPosition(0, 8);
+                Console.WriteLine("NIK SALAH");
+                FormLogin();
+            }
         }
     }
 }

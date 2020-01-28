@@ -1,23 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AgilityRFtools
 {
     class PalletChceking
     {
-        private static string PalletID;
+        private static string FromPalletID = "";
+        private static string Notes = "";
+        private static string Remarks = "";
+        private static string PalletID = "";
         private static string strKey = "";
         private static string key;
         private static string txt_CartonID;
         private static string result = "";
+        private static DateTime Editdate = DateTime.Now;
+        private static int Expected = 0;
+        private static int Scan = 0;
 
         public void Head()
         {
-
+            MainMenu.FormName = "MappingCek";
             Console.ForegroundColor = ConsoleColor.DarkYellow;
             Console.Clear();
             Console.SetCursorPosition(0, 0);
@@ -37,6 +39,7 @@ namespace AgilityRFtools
             Console.WriteLine("   PLB Agility Tools v 2.0.1   ");
 
         }
+
         public void Start()
         {
             MainMenu.FormName = "Mapping Cek";
@@ -45,18 +48,21 @@ namespace AgilityRFtools
             Console.ForegroundColor = ConsoleColor.Green;
             Console.SetCursorPosition(0, 2);
             Console.WriteLine("PalletNo     :");
-            Palletform(); 
+            Palletform();
         }
         private void resultSql()
         {
-            Console.SetCursorPosition(0,8);
+            Console.SetCursorPosition(0, 8);
             SqlConnection cn = new SqlConnection(ConfigDB.DBlocal);
-            SqlCommand cmd = new SqlCommand("select top 5 SKU,FromPalletID, CartonID from tbplbsami_fg_Unloaddetails " +
-                "where FromPalletID = @PalletID", cn);
-            cmd.Parameters.AddWithValue("@PalletID",PalletID);
+            SqlCommand cmd = new SqlCommand("select  mappingID,a.CartonID,b.sku,c.Notes from tbPLBSAMI_FG_tempGenerateLIST a inner join tbPLBSAMI_FG_stgMappingStock b on a.sku= b.sku and a.CartonID = b.CartonID and concat(a.AssyCode,'~',DestinationCode)= b.Lottable09 left join  " +
+            "   (select PalletID, CartonID, SKU, notes from tbplbsami_fg_mappingChecking group by PalletID, CartonID, SKU, Notes) c on c.CartonID = a.CartonID and c.PalletID = a.MappingID and a.sku = c.SKU " +
+            "   where MappingID = @PalletID and  isnull(c.Notes, '') = ''  " +
+            " group by mappingID,a.CartonID,b.sku,c.Notes ", cn);
+            cmd.Parameters.AddWithValue("@PalletID", PalletID);
             cn.Open();
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(String.Format("List Pallet:"));
+            Console.WriteLine(String.Format("List Carton Belum Scan (top 10):"));
+            Console.WriteLine(String.Format("_______________________________"));
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(String.Format("CartonID"));
             SqlDataReader reader = cmd.ExecuteReader();
@@ -64,39 +70,113 @@ namespace AgilityRFtools
             {
                 txt_CartonID = reader.GetString(1);
                 Console.WriteLine(String.Format("{0}",
-                reader[2]));
+                reader[1]));
             }
             reader.Close();
         }
-        public void ResultParsing()
+        public void SumExpected()
         {
             SqlConnection cn = new SqlConnection(ConfigDB.DBlocal);
             cn.Close();
-            SqlCommand cmd = new SqlCommand("select top 10 SKU,FromPalletID, CartonID from tbplbsami_fg_Unloaddetails " +
-                "where FromPalletID = @PalletID", cn);
+            SqlCommand cmd = new SqlCommand("select cast(count(CartonID)as int) as JumlahCarton from tbPLBSAMI_FG_tempGenerateLIST where MappingID=@PalletID group by MappingID", cn);
             cmd.Parameters.AddWithValue("@PalletID", PalletID);
             cn.Open();
             SqlDataReader reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                txt_CartonID = reader.GetString(2);
-                if (Parser.CartonNo ==txt_CartonID)
+                Expected = reader.GetInt32(0);
+            }
+            cn.Close();
+        }
+        public void sumScan()
+        {
+            SqlConnection cn = new SqlConnection(ConfigDB.DBlocal);
+            cn.Close();
+            SqlCommand cmd = new SqlCommand("select cast(count(distinct(cartonID))as int)as JumlahScan from  tbplbsami_fg_mappingChecking where PalletID=@palletID group by PalletID", cn);
+            cmd.Parameters.AddWithValue("@PalletID", PalletID);
+            cn.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                Scan = reader.GetInt32(0);
+            }
+            cn.Close();
+
+        }
+        public void ResultParsing()
+        {
+
+
+            if (Parser.QRinput.Contains("EMPTY"))
+            {
+
+                result = "Sesuai";
+                InsertSql();
+
+
+            }
+            else
+            {
+                SqlConnection cn = new SqlConnection(ConfigDB.DBlocal);
+                cn.Close();
+                SqlCommand cmd = new SqlCommand("select a.SKU,a.mappingID,a.CartonID from tbPLBSAMI_FG_tempGenerateLIST  a" +
+                    " where a.MappingID = @PalletID and CartonID= @cartonID and sku = @SKU" +
+                    "", cn);
+                cmd.Parameters.AddWithValue("@PalletID", PalletID);
+                cmd.Parameters.AddWithValue("@CartonID", Parser.CartonNo);
+                cmd.Parameters.AddWithValue("@SKU", Parser.SKU);
+                cn.Open();
+                var result = cmd.ExecuteScalar();
+                if (result != null)
                 {
                     result = "Sesuai";
+                    InsertSql();
+                    cn.Close();
                 }
                 else
                 {
-                    result = "Tidak Sesuai";
+                    Console.WriteLine("Data tidak di temukan");
                 }
             }
-            reader.Close();
-            key = "2";
-            Handler();
         }
+        private void InsertSql()
+        {
+            SqlConnection cn = new SqlConnection(ConfigDB.DBlocal);
+            cn.Close();
+            SqlCommand cmd = new SqlCommand("insert into tbplbsami_fg_mappingChecking " +
+                "(PalletID,CartonID,SKU,Remarks,Notes,EditDate,EditWho,QRcontent) " +
+                "values (@PalletID,@CartonID,@SKU,@Remarks,@Notes,getdate(),@EditWho,@QRcontent)", cn);
 
+            cmd.Parameters.Add(new SqlParameter("PalletID", PalletID));
+            cmd.Parameters.Add(new SqlParameter("CartonID", Parser.CartonNo));
+            cmd.Parameters.Add(new SqlParameter("SKU", Parser.SKU));
+            cmd.Parameters.Add(new SqlParameter("Remarks", Remarks));
+            cmd.Parameters.Add(new SqlParameter("Notes", "Sesuai"));
+            //cmd.Parameters.Add(new SqlParameter("Editdate", Editdate));
+            cmd.Parameters.Add(new SqlParameter("EditWho", LoginForm.NIK + '-' + LoginForm.UserName));
+            cmd.Parameters.Add(new SqlParameter("QRcontent", Parser.QRinput));
+            cn.Open();
+            try
+            {
+                cmd.ExecuteNonQuery();
+                Console.ForegroundColor = ConsoleColor.Green;
+                cn.Close();
+                Console.SetCursorPosition(0, 7);
+                Console.WriteLine("Succes");
+                key = "2";
+                Handler();
+            }
+            catch (Exception ex)
+            {
+                Console.Clear();
+                Console.WriteLine(ex);
+                cn.Close();
+            }
+
+        }
         public void Palletform()
         {
-            Ulang:
+        Ulang:
             Console.BackgroundColor = ConsoleColor.Black;
             Console.SetCursorPosition(14, 2);
             Console.BackgroundColor = ConsoleColor.White;
@@ -139,7 +219,7 @@ namespace AgilityRFtools
         }
         public void Cartonform()
         {
-            Ulang:
+        Ulang:
             Console.SetCursorPosition(14, 3);
             Console.BackgroundColor = ConsoleColor.White;
             Console.ForegroundColor = ConsoleColor.Black;
@@ -195,22 +275,27 @@ namespace AgilityRFtools
             Console.SetCursorPosition(0, 7);
             Console.Write("Total ");
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write("12");
+            Console.Write(Scan);
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(" of ");
-            Console.WriteLine("20"+ " Carton");
+            Console.WriteLine(Expected + " Carton");
             Console.ForegroundColor = ConsoleColor.White;
             resultSql();
         }
         private void Handler()
         {
-            if (key=="0")
+            if (key == "0")
             {
+
                 FormHeader();
                 Palletform();
             }
-            else if (key=="1")
+            else if (key == "1")
             {
+                Scan = 0;
+                Expected = 0;
+                sumScan();
+                SumExpected();
                 FormHeader();
                 Console.SetCursorPosition(14, 2);
                 Console.Write(PalletID);
@@ -218,14 +303,16 @@ namespace AgilityRFtools
             }
             else if (key == "2")
             {
+                sumScan();
                 FormHeader();
                 Console.SetCursorPosition(14, 2);
                 Console.Write(PalletID);
                 Console.SetCursorPosition(14, 4);
                 Console.Write(Parser.SKU);
-                Console.SetCursorPosition(0,6);
-                Console.WriteLine(">> "+Parser.CartonNo + " "+result );
+                Console.SetCursorPosition(0, 6);
+                Console.WriteLine(">> " + Parser.CartonNo + " " + result);
                 Cartonform();
+                resultSql();
             }
         }
         private void backtomenu()
@@ -233,5 +320,6 @@ namespace AgilityRFtools
             MainMenu L = new MainMenu();
             L.Menu_Home();
         }
-     }
+
+    }
 }
