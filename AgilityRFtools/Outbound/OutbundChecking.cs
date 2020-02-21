@@ -1411,7 +1411,6 @@ namespace AgilityRFtools
 
                 var diff = Order.AsEnumerable().Except(OrdersLocal.AsEnumerable(),
                                                                     DataRowComparer.Default);
-
                 Console.SetCursorPosition(0, 10);
                 Console.WriteLine(String.Format("                           "));
                 Console.ForegroundColor = ConsoleColor.Red;

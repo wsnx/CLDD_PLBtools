@@ -371,13 +371,11 @@ namespace AgilityRFtools
                     txt_receipt = reader.GetString(2);
                     txt_Status = reader.GetString(3);
                 }
-
                 Handler();
                 cn.Close();
             }
             else
             {
-
                 Console.SetCursorPosition(0, 14);
                 Console.BackgroundColor = ConsoleColor.Red;
                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -386,7 +384,6 @@ namespace AgilityRFtools
                 Console.WriteLine("       Pallet Not Found           ");
                 Console.WriteLine("                                  ");
                 Console.WriteLine("                                  ");
-
                 key = "2";
                 Handler();
 
@@ -508,7 +505,6 @@ namespace AgilityRFtools
             cn.Open();
             SqlCommand cmd = new SqlCommand("RWM_SP_UnloadChecking", cn);
             cmd.CommandType = System.Data.CommandType.StoredProcedure;
-
             cmd.Parameters.Add(new SqlParameter("Receiptkey", txt_ASN));
             cmd.Parameters.Add(new SqlParameter("Container", txt_Container));
             cmd.Parameters.Add(new SqlParameter("ExternReceiptkey", txt_ExternReceiptkey));
@@ -526,7 +522,6 @@ namespace AgilityRFtools
 
             try
             {
-
                 cmd.ExecuteNonQuery();
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.Write("Succes");
@@ -580,7 +575,7 @@ namespace AgilityRFtools
             cn.Close();
             SqlCommand cmd = new SqlCommand("select a.receiptkey,a.storerkey,concat(substring(cast((cast(cast(count(distinct(b.Qrcontent))as float)/cast(count(distinct(a.qrcontent))as float)as decimal(18,3)))*100 as varchar),0,6),'%') from tbplbsami_fg_stgreceiptdetail a  " +
                 "left join tbplbsami_fg_unloaddetails b on a.receiptkey = b.receiptkey and a.sku = b.sku and a.lottable10 = b.cartonid and replace(a.qrcontent,'|',',') = b.qrcontent " +
-                "where a.storerkey like 'PLBSAM%' and len(a.qrcontent)>1 group by a.receiptkey,a.storerkey", cn);
+                "where a.storerkey like 'PLBSAM%' and len(a.qrcontent)>1 and a.Receiptstatus !='Closed' group by a.receiptkey,a.storerkey", cn);
             cn.Open();
             Console.WriteLine(String.Format("{0,7} | {1,9} | {2,9}|  ", "Receiptkey", "Storerkey", "Percentage" ));
             SqlDataReader reader = cmd.ExecuteReader();
