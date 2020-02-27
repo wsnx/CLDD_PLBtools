@@ -79,6 +79,19 @@ namespace AgilityRFtools
                     Handler();
                 }
 
+                else if (QRinput.Contains ("28150-5WB-0000 00A0"))
+                {
+                    string[] b = QRinput.Split(new string[] { "," }, StringSplitOptions.None);
+                    SKU = b[0].ToString();
+                    string carton = b[2].ToString();
+                    AssyCode = b[4].ToString();
+                    Int32 aaa = Convert.ToInt32(carton);
+                    CartonNo = aaa.ToString();
+                    string x = b[1].ToString();
+                    Qty = Convert.ToInt32(x);
+
+                    Handler();
+                }
                 else if (a == "28")
                 {
                     string[] b = QRinput.Split(new string[] { "," }, StringSplitOptions.None);
